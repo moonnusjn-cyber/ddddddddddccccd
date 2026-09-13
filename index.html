@@ -92,7 +92,7 @@
                         <button class="btn-action btn-reset" onclick="resetCart()">🗑️ جديد</button>
                     </div>
                     <div class="action-btns" style="margin-top:3px;">
-                        <button class="btn-action btn-history" onclick="showHistory()">📜 الفواتير</button>
+                        <button onclick="saveAndPrintInvoice()">طباعة</button>
                         <button class="btn-action btn-stock" onclick="showStockReport()">📦 المخزن</button>
                     </div>
                 </div>
@@ -253,9 +253,25 @@
             document.getElementById('modal-box').style.display = 'none';
         }
 
-        function showHistory() {
-            showModal("سجل الفواتير", "<p style='text-align:center;'>لا توجد فواتير مسجلة.</p>");
-        }
+       // دالة حفظ وعرض الفاتورة
+function saveAndPrintInvoice() {
+    let invoices = JSON.parse(localStorage.getItem('saved_invoices')) || [];
+    
+    // تأكد إن سلة المنتجات مش فاضية قبل الحفظ
+    if (typeof cart !== 'undefined' && cart.length > 0) {
+        let newInvoice = {
+            id: document.getElementById('invoice-id') ? document.getElementById('invoice-id').innerText : "1001",
+            date: new Date().toLocaleString(),
+            items: [...cart],
+            total: typeof totalAmount !== 'undefined' ? totalAmount : 0
+        };
+        
+        invoices.push(newInvoice);
+        localStorage.setItem('saved_invoices', JSON.stringify(invoices));
+    }
+    
+    window.print(); // تنفيذ الطباعة
+}
 
         function showStockReport() {
             var html = '<table style="width:100%; border-collapse:collapse; text-align:center; font-size:10px;"><thead><tr style="background:#f1f5f9;"><th style="text-align:right;">الصنف</th><th>السعر</th><th>المتبقي</th></tr></thead><tbody>';
