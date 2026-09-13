@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تطبيق كاشير العدوي</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Tahoma, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #0f172a; padding: 4px; direction: rtl; text-align: right; color: #1e293b; font-size: 11px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .app-frame { width: 100%; max-width: 420px; background: #f8fafc; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; height: 95vh; border: 4px solid #334155; }
+        .app-header { background: #1e3a8a; color: white; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .app-header h1 { font-size: 13px; margin: 0; font-weight: bold; }
+        .header-info { font-size: 10px; background: #3b82f6; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .app-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+        .section-card { background: white; padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .search-box { width: 100%; padding: 7px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 11px; outline: none; margin-bottom: 6px; }
+        .categories { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 6px; padding-bottom: 2px; }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-btn { padding: 5px 10px; border: none; background: #e2e8f0; color: #1e293b; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .cat-btn.active { background: #2563eb; color: white; }
+        .products-grid { overflow-y: auto; max-height: 160px; border: 1px solid #e2e8f0; padding: 4px; background: #fff; border-radius: 6px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .product-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px; text-align: center; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; height: 70px; }
+        .product-title { font-weight: bold; color: #0f172a; display: block; font-size: 9px; height: 22px; overflow: hidden; }
+        .product-price { font-weight: bold; color: #16a34a; font-size: 10px; display: block; }
+        .product-stock { font-size: 8px; color: #64748b; background: #f1f5f9; padding: 1px; border-radius: 3px; }
+        .top-inputs { display: flex; gap: 4px; margin-bottom: 6px; }
+        .top-inputs input { flex: 1; padding: 6px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 10px; outline: none; }
+        .cart-table-wrapper { max-height: 120px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px; }
+        .cart-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 10px; }
+        .cart-table th { background: #f1f5f9; padding: 5px; border-bottom: 2px solid #cbd5e1; position: sticky; top: 0; }
+        .cart-table td { padding: 4px 2px; border-bottom: 1px solid #f1f5f9; }
+        .qty-btn { width: 20px; height: 20px; border: none; background: #cbd5e1; font-weight: bold; border-radius: 3px; cursor: pointer; }
+        .del-btn { color: #dc2626; cursor: pointer; font-weight: bold; font-size: 11px; background: #fee2e2; padding: 1px 5px; border-radius: 3px; }
+        .summary-box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px; border-radius: 6px; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 10px; font-weight: bold; }
+        .summary-row input { width: 80px; padding: 4px; text-align: center; border: 2px solid #2563eb; border-radius: 4px; font-weight: bold; font-size: 11px; outline: none; }
+        .action-btns { display: flex; gap: 4px; margin-top: 4px; }
+        .btn-action { flex: 1; padding: 7px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; font-size: 10px; text-align: center; }
+        .btn-print { background: #16a34a; }
+        .btn-reset { background: #dc2626; }
+        .btn-history { background: #d97706; }
+        .btn-stock { background: #4f46e5; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 12px; border-radius: 8px; width: 90%; max-width: 380px; max-height: 70vh; overflow-y: auto; text-align: right; }
+        .close-btn { cursor: pointer; font-weight: bold; color: white; background: #dc2626; padding: 3px 8px; border-radius: 4px; float: left; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div class="app-frame">
+        <div class="app-header">
+            <h1>🛒 كاشير العدوي</h1>
+            <div style="display:flex; gap:4px;">
+                <div class="header-info" id="clock">--:--</div>
+                <div class="header-info" id="invoice-badge">#1001</div>
+            </div>
+        </div>
+        <div class="app-body">
+            <div class="section-card">
+                <div class="top-inputs">
+                    <input type="text" id="cashier-name" placeholder="👨‍💼 البائع">
+                    <input type="text" id="cust-name" placeholder="👤 العميل">
+                </div>
+                <div class="cart-table-wrapper">
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align:right;">الصنف</th>
+                                <th>السعر</th>
+                                <th>العدد</th>
+                                <th>الإجمالي</th>
+                                <th>حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-rows"></tbody>
+                    </table>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span>الإجمالي:</span>
+                        <span id="grand-total" style="color:#2563eb; font-size:12px;">0 ج</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>المدفوع:</span>
+                        <input type="number" id="paid-amount" placeholder="0" onkeyup="calculateChange()">
+                    </div>
+                    <div class="summary-row">
+                        <span>الباقي:</span>
+                        <span id="change-amount" style="color:#16a34a; font-size:12px;">0 ج</span>
+                    </div>
+                    <div class="action-btns">
+                        <button class="btn-action btn-print" onclick="completeAndPrint()">🖨️ طباعة</button>
+                        <button class="btn-action btn-reset" onclick="resetCart()">🗑️ جديد</button>
+                    </div>
+                    <div class="action-btns" style="margin-top:3px;">
+                        <button class="btn-action btn-history" onclick="showHistory()">📜 الفواتير</button>
+                        <button class="btn-action btn-stock" onclick="showStockReport()">📦 المخزن</button>
+                    </div>
+                </div>
+            </div>
+            <div class="section-card">
+                <input type="text" id="search" class="search-box" placeholder="🔍 ابحث في المنتجات..." onkeyup="filterProducts()">
+                <div class="categories">
+                    <button class="cat-btn active" onclick="setCategory('الكل', this)">الكل</button>
+                    <button class="cat-btn" onclick="setCategory('بقالة', this)">بقالة</button>
+                    <button class="cat-btn" onclick="setCategory('ألبان وجبن', this)">ألبان</button>
+                    <button class="cat-btn" onclick="setCategory('مشروبات', this)">مشروبات</button>
+                    <button class="cat-btn" onclick="setCategory('منظفات', this)">منظفات</button>
+                    <button class="cat-btn" onclick="setCategory('حلويات', this)">حلويات</button>
+                    <button class="cat-btn" onclick="setCategory('عطارة', this)">عطارة</button>
+                </div>
+                <div class="products-grid" id="grid"></div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-box" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">✕ إغلاق</span>
+            <h3 id="modal-title" style="margin-bottom:8px; font-size:11px;"></h3>
+            <div id="modal-body" style="clear:both; margin-top:6px;"></div>
+        </div>
+    </div>
+    <script>
+        var invoiceNumber = 1001;
+        var products = [];
+        var cart = [];
+        var salesHistory = [];
+        var currentCategory = "الكل";
+
+        function initProducts() {
+            var base = [
+                {n: "أرز مصري المروة", p: 35, c: "بقالة"}, {n: "سكر الأبيض الضحى", p: 38, c: "بقالة"}, {n: "زيت عافية ذرة", p: 95, c: "بقالة"}, {n: "زيت كريستال عباد", p: 88, c: "بقالة"}, {n: "سمنة روابي 1.5ك", p: 110, c: "بقالة"}, {n: "مكرونة الملكة 400ج", p: 12, c: "بقالة"}, {n: "مكرونة حواء 400ج", p: 12, c: "بقالة"}, {n: "عدس أصفر تركي", p: 55, c: "بقالة"}, {n: "فول تدمس مستورد", p: 40, c: "بقالة"}, {n: "دقيق الضحى فاخر", p: 30, c: "بقالة"}, {n: "صلصة هيلين 300ج", p: 16, c: "بقالة"}, {n: "تونة زادي قطعة واحدة", p: 45, c: "بقالة"}, {n: "أرز الضحى فاخر 1ك", p: 38, c: "بقالة"}, {n: "سمنة كريستال صفراء 1ك", p: 95, c: "بقالة"}, {n: "زيت قللي فري", p: 75, c: "بقالة"}, {n: "مكرونة الإيطاليانو 400ج", p: 22, c: "بقالة"}, {n: "تونه البشاير قطعتين", p: 50, c: "بقالة"}, {n: "فول مدمس جاهز هينز", p: 18, c: "بقالة"}, {n: "أرز الساعة فاخر", p: 40, c: "بقالة"}, {n: "زيت سلايت ذرة خفيف", p: 98, c: "بقالة"}, {n: "سمنة روابي 700ج", p: 58, c: "بقالة"}, {n: "سمنة بلدي مصري 1ك", p: 180, c: "بقالة"}, {n: "مكرونة بساطة 400ج", p: 10, c: "بقالة"}, {n: "لسان عصفور الملكة", p: 13, c: "بقالة"}, {n: "شعرية الملكة", p: 13, c: "بقالة"}, {n: "مشروم whole معلب", p: 42, c: "بقالة"}, {n: "تونة مفتتة ريتشي", p: 30, c: "بقالة"}, {n: "صلصة أجيال 300ج", p: 14, c: "بقالة"}, {n: "خل زجاجة 1لتر", p: 10, c: "بقالة"}, {n: "عدس حبة بجبة", p: 50, c: "بقالة"}, {n: "لوبيا رقيقة جافة", p: 60, c: "بقالة"}, {n: "فاصوليا بيضاء جافة", p: 65, c: "بقالة"}, {n: "حمص حمصي جاف", p: 70, c: "بقالة"}, {n: "ترمس حلو بزر كبير", p: 55, c: "بقالة"}, {n: "نشا ذرة كيس صغير", p: 12, c: "بقالة"}, {n: "ملح طعام سياج", p: 5, c: "بقالة"},
+                {n: "لبن جهينة كامل 1لتر", p: 45, c: "ألبان وجبن"}, {n: "لبن المراعي 1لتر", p: 44, c: "ألبان وجبن"}, {n: "جبنة براميلي طرية", p: 120, c: "ألبان وجبن"}, {n: "جبنة إستنبولي حارة", p: 125, c: "ألبان وجبن"}, {n: "جبنة رومي شهد", p: 240, c: "ألبان وجبن"}, {n: "جبنة شيدر مستوردة", p: 220, c: "ألبان وجبن"}, {n: "جبنة مثلثات أبو عوف", p: 35, c: "ألبان وجبن"}, {n: "قشطة طازجة بلدي", p: 50, c: "ألبان وجبن"},
+                {n: "كانز بيبسي 330مل", p: 15, c: "مشروبات"}, {n: "كانز كوكاكولا 330مل", p: 15, c: "مشروبات"}, {n: "كانز سفن أب 330مل", p: 15, c: "مشروبات"}, {n: "كانز ميرندا أورانج", p: 15, c: "مشروبات"}, {n: "كانز ميرندا تفاح", p: 15, c: "مشروبات"}, {n: "كانز بريل مالت بالبيرة", p: 20, c: "مشروبات"}, {n: "كانز فاوستو بيرة هلال", p: 20, c: "M_cat"}, {n: "كانز ريد بول طاقة 250مل", p: 55, c: "مشروبات"}, {n: "كانز كابتن ريتش طاقة", p: 35, c: "مشروبات"}, {n: "مياه معدنية حياة 1.5لتر", p: 8, c: "مشروبات"}, {n: "مياه معدنية حياة 600مل", p: 6, c: "مشروبات"}, {n: "مياه نستله بيور لايف 1.5لتر", p: 9, c: "مشروبات"}, {n: "مياه نستله بيور لايف 600مل", p: 6, c: "مشروبات"}, {n: "مياه بركة 1.5لتر", p: 8, c: "مشروبات"}, {n: "عصير جهينة جوافة 1لتر", p: 25, c: "مشروبات"}, {n: "عصير جهينة مانجو 1لتر", p: 25, c: "مشروبات"}, {n: "عصير جهينة برتقال 1لتر", p: 25, c: "مشروبات"}, {n: "عصير جهينة تفاح 1لتر", p: 25, c: "مشروبات"}, {n: "عصير جهينة جهينة كوكتيل 1لتر", p: 25, c: "مشروبات"}, {n: "عصير جهينة جهينة جوافة 200مل", p: 8, c: "مشروبات"}, {n: "عصير جهينة جهينة مانجو 200مل", p: 8, c: "مشروبات"}, {n: "عصير جهينة جهينة برتقال 200مل", p: 8, c: "مشروبات"}, {n: "عصير جهينة جوز الهند 200مل", p: 10, c: "مشروبات"}, {n: "عصير المراعي مانجو 1لتر", p: 25, c: "مشروبات"}, {n: "عصير المراعي برتقال 1لتر", p: 25, c: "مشروبات"}, {n: "عصير المراعي جوافة 1لتر", p: 25, c: "مشروبات"}, {n: "عصير جهينة ڤايبر طاقة", p: 18, c: "مشروبات"}, {n: "شاي العروسة ناعم 250ج", p: 65, c: "مشروبات"}, {n: "شاي ليبتون ناعم 250ج", p: 70, c: "مشروبات"}, {n: "شاي ليبتون فتلة 100مكيال", p: 95, c: "مشروبات"}, {n: "شاي العروسة فتلة 100مكيال", p: 90, c: "مشروبات"}, {n: "شاي الكابوس 250ج", p: 75, c: "مشروبات"}, {n: "نسكافيه كلاسيك 200ج", p: 190, c: "مشروبات"}, {n: "نسكافيه جولد 50ج", p: 95, c: "مشروبات"}, {n: "نسكافيه 3 في 1 كيس", p: 6, c: "مشروبات"}, {n: "علي كافيه 3 في 1 كيس", p: 7, c: "مشروبات"}, {n: "بن محوج وسط عبد المقصود", p: 120, c: "مشروبات"}, {n: "بن شاهين سادة 200ج", p: 100, c: "مشروبات"}, {n: "حليب جهينة شوكولاتة 200مل", p: 12, c: "مشروبات"}, {n: "حليب جهينة فراولة 200مل", p: 12, c: "مشروبات"}, {n: "حليب جهينة موز 200مل", p: 12, c: "مشروبات"}, {n: "حليب لمار شوكولاتة 200مل", p: 12, c: "مشروبات"}, {n: "حليب لامار فراولة 200مل", p: 12, c: "مشروبات"}, {n: "مشروب لامار مانجو 1لتر", p: 28, c: "مشروبات"},
+                {n: "مسحوق أريال أوتوماتيك 2.5ك", p: 195, c: "منظفات"}, {n: "مسحوق برسيل جل 3لتر", p: 135, c: "منظفات"}, {n: "سائل أواني فيري 800مل", p: 55, c: "منظفات"}, {n: "صابون وجه كامي", p: 15, c: "منظفات"}, {n: "معجون أسنان سيجنال 100م", p: 35, c: "منظفات"}, {n: "شامبو بانتين 400مل", p: 95, c: "منظفات"}, {n: "كلوركس ألوان 1لتر", p: 50, c: "منظفات"}, {n: "ديتول مطهر أصلي", p: 90, c: "منظفات"}, {n: "مسحوق تايد 2.5ك", p: 185, c: "منظفات"}, {n: "جل منظف الأسطح ديتول", p: 65, c: "منظفات"}, {n: "كلور أبيض العبوات الكبيرة", p: 25, c: "منظفات"}, {n: "فلاش تنظيف الحمام", p: 30, c: "منظفات"}, {n: "سبراي معطر جو فبريز", p: 75, c: "منظفات"}, {n: "صمغ أو ليفة مواعين خشنة", p: 10, c: "منظفات"}, {n: "سلك ألومنيوم ناعم للمواعين", p: 12, c: "منظفات"}, {n: "إسفنج مواعين حزمة 5 قطع", p: 20, c: "منظفات"},
+                {n: "شيبسي بطاطس عائلي", p: 15, c: "حلويات"}, {n: "شيبسي شطة وليمون", p: 10, c: "حلويات"}, {n: "شيبسي جبنة كلاسيك", p: 10, c: "حلويات"}, {n: "شيبسي كاتشب", p: 10, c: "حلويات"}, {n: "شيبسي ببريكا", p: 10, c: "حلويات"}, {n: "شيبسي تايجر طماطم", p: 9, c: "حلويات"}, {n: "شيبسي تايكي جبنة", p: 9, c: "حلويات"}, {n: "شيبسي بيج رول", p: 8, c: "حلويات"}, {n: "شيبسي تايجر شطة", p: 9, c: "حلويات"}, {n: "مقرمشات بيك رولز سادة", p: 8, c: "حلويات"}, {n: "مقرمشات بيك رولز بيتزا", p: 8, c: "حلويات"}, {n: "مقرمشات بيك رولز زبدة", p: 8, c: "حلويات"}, {n: "سناكس بريدكس بطعم الجبنة", p: 7, c: "حلويات"}, {n: "سناكس صัน بايتس زيتون", p: 10, c: "حلويات"}, {n: "سناكس صัน بايتس جبنة", p: 10, c: "حلويات"}, {n: "شوكولاتة كادبوري ديري ميلك", p: 35, c: "حلويات"}, {n: "شوكولاتة كادبوري بندق", p: 38, c: "حلويات"}, {n: "شوكولاتة كادبوري كراميل", p: 38, c: "حلويات"}, {n: "شوكولاتة جالاكسي سادة", p: 40, c: "حلويات"}, {n: "شوكولاتة جالاكسي بالبندق", p: 42, c: "حلويات"}, {n: "شوكولاتة كيندر بوينا", p: 25, c: "حلويات"}, {n: "شوكولاتة كيندر چوي", p: 30, c: "حلويات"}, {n: "شوكولاتة مارس", p: 20, c: "حلويات"}, {n: "شوكولاتة سنيكرز", p: 20, c: "حلويات"}, {n: "شوكولاتة باونتي", p: 20, c: "حلويات"}, {n: "شوكولاتة تويكس", p: 20, c: "حلويات"}, {n: "شوكولاتة ليون نستله", p: 12, c: "حلويات"}, {n: "شوكولاتة كيت كات", p: 15, c: "حلويات"}, {n: "بسكويت أوريو بالكريمة", p: 10, c: "حلويات"}, {n: "بسكويت بوريو", p: 6, c: "حلويات"}, {n: "بسكويت أولكر تيم", p: 6, c: "حلويات"}, {n: "بسكويت تودو كيك", p: 7, c: "حلويات"}, {n: "كيكة هوهوز سفن دايز", p: 7, c: "حلويات"}, {n: "كيكة تووينكيز إدفينا", p: 7, c: "حلويات"}, {n: "كيكة هوز هوز إدفينا", p: 6, c: "حلويات"}, {n: "مولتو باتيه شوكولاتة", p: 10, c: "حلويات"}, {n: "مولتو باتيه جبنة", p: 10, c: "حلويات"}, {n: "مولتو ميني كرواسون", p: 8, c: "حلويات"},
+                {n: "فلفل أسود حب مطحون", p: 300, c: "عطارة"}, {n: "كمون ناعم بلدي مميز", p: 260, c: "عطارة"}, {n: "كزبرة خشکة مطحونة", p: 160, c: "عطارة"}, {n: "كركم مطحون نقي", p: 180, c: "عطارة"}, {n: "مرقة دجاج ماجي مكعبات", p: 28, c: "عطارة"}, {n: "مشروم معلب سليس", p: 40, c: "عطارة"}, {n: "ذرة حلوة معلبة فريش", p: 30, c: "عطارة"}, {n: "حلاوة طحينية العروسة 1ك", p: 95, c: "عطارة"}, {n: "بهارات لحمة مشكلة", p: 220, c: "عطارة"}, {n: "بهارات فراخ بصلصة", p: 200, c: "عطارة"}, {n: "قرفة مطحونة ناعمة", p: 240, c: "عطارة"}, {n: "حبهان (هيل) حصى", p: 900, c: "عطارة"}, {n: "قرفل حصى صحيح", p: 400, c: "عطارة"}, {n: "ورق لورا ممتاز", p: 150, c: "عطارة"}, {n: "زعتر ناشف فرط", p: 180, c: "عطارة"}, {n: "سماق تركي مطحون", p: 240, c: "عطارة"},
+            ];
+            for (var i = 0; i < base.length; i++) {
+                products.push({ name: base[i].n, price: base[i].p, qty: 100, cat: base[i].c });
+            }
+        }
+        initProducts();
+
+        function renderProducts(list) {
+            var grid = document.getElementById('grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            for (var i = 0; i < list.length; i++) {
+                var p = list[i];
+                var card = document.createElement('div');
+                card.className = 'product-card';
+                card.setAttribute('onclick', 'addToCart("' + p.name + '")');
+                card.innerHTML = '<span class="product-title">' + p.name + '</span>' +
+                                 '<span class="product-price">' + p.price + ' ج</span>' +
+                                 '<div class="product-stock">المتاح: ' + p.qty + '</div>';
+                grid.appendChild(card);
+            }
+        }
+
+        function setCategory(cat, btn) {
+            currentCategory = cat;
+            var btns = document.getElementsByClassName('cat-btn');
+            for (var i = 0; i < btns.length; i++) { btns[i].className = 'cat-btn'; }
+            btn.className = 'cat-btn active';
+            filterProducts();
+        }
+
+        function filterProducts() {
+            var q = document.getElementById('search').value.toLowerCase();
+            var filtered = [];
+            for (var i = 0; i < products.length; i++) {
+                var p = products[i];
+                var matchCat = (currentCategory === "الكل" || p.cat === currentCategory);
+                var matchName = (q === '' || p.name.toLowerCase().indexOf(q) !== -1);
+                if (matchCat && matchName) { filtered.push(p); }
+            }
+            renderProducts(filtered);
+        }
+
+        function addToCart(name) {
+            var prod = null;
+            for (var i = 0; i < products.length; i++) {
+                if (products[i].name === name) { prod = products[i]; break; }
+            }
+            if (!prod || prod.qty <= 0) return;
+            var inCart = null;
+            for (var j = 0; j < cart.length; j++) {
+                if (cart[j].name === name) { inCart = cart[j]; break; }
+            }
+            if (inCart) { inCart.qty++; } else { cart.push({ name: prod.name, price: prod.price, qty: 1 }); }
+            updateCartUI();
+        }
+
+        function changeQty(index, delta) {
+            cart[index].qty += delta;
+            if (cart[index].qty <= 0) { cart.splice(index, 1); }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            var tbody = document.getElementById('cart-rows');
+            tbody.innerHTML = '';
+            var total = 0;
+            for (var i = 0; i < cart.length; i++) {
+                var item = cart[i];
+                var itemTotal = item.price * item.qty;
+                total += itemTotal;
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td style="text-align:right; font-weight:bold;">' + item.name + '</td>' +
+                    '<td>' + item.price + '</td>' +
+                    '<td><button class="qty-btn" onclick="changeQty(' + i + ', -1)">-</button> <b>' + item.qty + '</b> <button class="qty-btn" onclick="changeQty(' + i + ', 1)">+</button></td>' +
+                    '<td style="font-weight:bold; color:#2563eb;">' + itemTotal + '</td>' +
+                    '<td><span class="del-btn" onclick="changeQty(' + i + ', -' + item.qty + ')">✕</span></td>';
+                tbody.appendChild(tr);
+            }
+            document.getElementById('grand-total').innerHTML = total + " ج";
+            calculateChange();
+        }
+
+        function calculateChange() {
+            var total = parseFloat(document.getElementById('grand-total').innerHTML) || 0;
+            var paid = parseFloat(document.getElementById('paid-amount').value) || 0;
+            var changeEl = document.getElementById('change-amount');
+            var change = paid - total;
+            if (change >= 0) {
+                changeEl.innerHTML = change + " ج";
+                changeEl.style.color = "#16a34a";
+            } else {
+                changeEl.innerHTML = "ناقص " + Math.abs(change) + " ج";
+                changeEl.style.color = "#dc2626";
+            }
+        }
+
+        function resetCart() {
+            cart = [];
+            document.getElementById('paid-amount').value = '';
+            updateCartUI();
+        }
+
+        function completeAndPrint() {
+            if (cart.length === 0) { alert("السلة فارغة!"); return; }
+            alert("تم حفظ وطباعة الفاتورة بنجاح!");
+            resetCart();
+        }
+
+        function showModal(title, bodyHtml) {
+            document.getElementById('modal-title').innerHTML = title;
+            document.getElementById('modal-body').innerHTML = bodyHtml;
+            document.getElementById('modal-box').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-box').style.display = 'none';
+        }
+
+        function showHistory() {
+            showModal("سجل الفواتير", "<p style='text-align:center;'>لا توجد فواتير مسجلة.</p>");
+        }
+
+        function showStockReport() {
+            var html = '<table style="width:100%; border-collapse:collapse; text-align:center; font-size:10px;"><thead><tr style="background:#f1f5f9;"><th style="text-align:right;">الصنف</th><th>السعر</th><th>المتبقي</th></tr></thead><tbody>';
+            for (var i = 0; i < products.length; i++) {
+                html += '<tr style="border-bottom:1px solid #e2e8f0;"><td style="text-align:right;">' + products[i].name + '</td><td>' + products[i].price + ' ج</td><td><b>' + products[i].qty + '</b></td></tr>';
+            }
+            html += '</tbody></table>';
+            showModal("جرد المخزن", html);
+        }
+
+        filterProducts();
+    </script>
+</body>
+</html>
