@@ -88,11 +88,11 @@
                         <span id="change-amount" style="color:#16a34a; font-size:12px;">0 ج</span>
                     </div>
                     <div class="action-btns">
-                        <button class="btn-action btn-print" onclick="completeAndPrint()">🖨️ طباعة</button>
+                        <button class="btn-action btn-print" onclick="saveAndPrintInvoice()">🖨️ طباعة</button>
                         <button class="btn-action btn-reset" onclick="resetCart()">🗑️ جديد</button>
                     </div>
                     <div class="action-btns" style="margin-top:3px;">
-                        <button onclick="saveAndPrintInvoice()">طباعة</button>
+                        <button class="btn-action btn-stock" onclick="loadAndShowInvoices(); showInvoicesModal();" style="background-color: #d97706;">📜 الفواتير</button>
                         <button class="btn-action btn-stock" onclick="showStockReport()">📦 المخزن</button>
                     </div>
                 </div>
